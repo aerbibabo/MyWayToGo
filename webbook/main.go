@@ -7,7 +7,8 @@ import (
 	"github.com/aerbibabo/MyWayToGo/webbook/internal/web"
 	"github.com/aerbibabo/MyWayToGo/webbook/internal/web/middleware"
 	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
+	//"github.com/gin-contrib/sessions/cookie"
+	"github.com/gin-contrib/sessions/redis"
 	"github.com/gin-gonic/contrib/cors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
@@ -26,13 +27,24 @@ func main() {
 	server := initWebServer()
 
 	//登录校验
-	store := cookie.NewStore([]byte("secret"))
-	server.Use(sessions.Sessions("ssid", store))
+	//store := cookie.NewStore([]byte("secret"))
+	redisStore, err := redis.NewStore(16, "tcp", "localhost:6379",
+		"root", "",
+		[]byte("0apssj7hhulymyb0"),
+		[]byte("hdfpa75c6x1y00k9"))
+	if err != nil {
+		panic("redis连接失败" + err.Error())
+		return
+	}
+
+	server.Use(sessions.Sessions("ssid", redisStore))
+
+	server.Use(middleware.NewLoginMiddleware().
+		IgnorePath("/users/login").
+		IgnorePath("/users/signup").Build())
 
 	u := initUser(db)
 	u.RegisterRoutes(server)
-
-	server.Use(middleware.NewLoginMiddleware().Build())
 
 	err = server.Run(":8080")
 	if err != nil {

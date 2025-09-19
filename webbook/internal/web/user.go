@@ -122,6 +122,10 @@ func (user *UserHandler) Login(ctx *gin.Context) {
 
 	sess := sessions.Default(ctx)
 	sess.Set("userId", loginUser.Id)
+	sess.Options(sessions.Options{
+		Path:   "/",
+		MaxAge: 30,
+	})
 	_ = sess.Save()
 
 	ctx.String(http.StatusOK, "登陆成功")
