@@ -5,15 +5,18 @@ import (
 	"github.com/aerbibabo/MyWayToGo/webbook/internal/domain"
 	"github.com/aerbibabo/MyWayToGo/webbook/internal/service"
 	regexp "github.com/dlclark/regexp2"
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 const (
 	emailRegexPattern = "^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*$"
 	// 和上面比起来，用 ` 看起来就比较清爽
 	passwordRegexPattern = `^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,}$`
+	JWTKey               = "0apssj7hhulymyb0"
 )
 
 type UserHandler struct {
@@ -120,13 +123,29 @@ func (user *UserHandler) Login(ctx *gin.Context) {
 		return
 	}
 
-	sess := sessions.Default(ctx)
-	sess.Set("userId", loginUser.Id)
-	sess.Options(sessions.Options{
-		Path:   "/",
-		MaxAge: 30,
-	})
-	_ = sess.Save()
+	//sess := sessions.Default(ctx)
+	//sess.Set("userId", loginUser.Id)
+	//sess.Options(sessions.Options{
+	//	Path:   "/",
+	//	MaxAge: 30,
+	//})
+	//_ = sess.Save()
+
+	claims := UserClime{
+		Userid: loginUser.Id,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
+		},
+	}
+	//使用jwt
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenStr, err := token.SignedString([]byte(JWTKey))
+	if err != nil {
+		ctx.String(http.StatusInternalServerError, "生成jwt错误")
+		return
+	}
+
+	ctx.Header("x-jwt-token", tokenStr)
 
 	ctx.String(http.StatusOK, "登陆成功")
 
@@ -137,5 +156,24 @@ func (user *UserHandler) Edit(ctx *gin.Context) {
 
 }
 func (user *UserHandler) Profile(ctx *gin.Context) {
-	ctx.String(http.StatusOK, "profile")
+	c, ok := ctx.Get("claims")
+	if !ok {
+		println(ok)
+
+		ctx.String(http.StatusInternalServerError, "profile error")
+		return
+	}
+
+	claims, ok := c.(*UserClime)
+	if !ok {
+		println(ok)
+		ctx.String(http.StatusInternalServerError, "profile error2")
+	}
+
+	ctx.String(http.StatusOK, "profile"+strconv.FormatInt(claims.Userid, 10))
+}
+
+type UserClime struct {
+	jwt.RegisteredClaims
+	Userid int64
 }
