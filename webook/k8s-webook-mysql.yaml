@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: webook-mysql
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 3308
+      name: mysql
+      protocol: TCP
+      targetPort: 3306
+  # 筛选带 app:mysql 的 pod
+  selector:
+    app: webook-mysql
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webook-mysql
+  labels:
+    app: webook-mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webook-mysql
+  template:
+    metadata:
+      name: webook-mysql
+      labels:
+        app: webook-mysql
+    spec:
+      containers:
+        - name: webook-mysql
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: root
+          image: mysql:8.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3306
+              protocol: TCP
+          volumeMounts:
+#           这两个配置的意思是，mysql 的数据存在 mysql-storage 这个持久化卷的 /mysql 目录下
+            - mountPath: /var/lib/mysql
+              name: mysql-storage
+      volumes:
+        - name: mysql-storage
+          persistentVolumeClaim:
+            claimName: webook-mysql-pv-claim
+
+---
+# 开始描述 mysql 的存储结构需要具备什么样的特征
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: webook-mysql-pv-claim
+spec:
+#  这里的 manual 其实是一个我们自己写的，只是用来绑定一下 pv 而已
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+# 究竟需要一些什么资源
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+# 一个真实的volume
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: webook-mysql-pv
+#  labels 都是随便打的
+  labels:
+    type: local
+spec:
+#  这边 storageClassName 也设置为 manual 从而和 pvc 绑定在一起
+  storageClassName: manual
+  #  各种容量
+  capacity:
+    #    存储容量
+    storage: 1Gi
+  #   本 PV 支持的访问方式
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    #    本 PV 的根目录
+    path: "/mnt/data"
+      
