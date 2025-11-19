@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"github.com/aerbibabo/MyWayToGo/webbook/internal/web"
+	"github.com/aerbibabo/MyWayToGo/webook/internal/web"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"

@@ -2,8 +2,8 @@ package repostory
 
 import (
 	"context"
-	"github.com/aerbibabo/MyWayToGo/webbook/internal/domain"
-	"github.com/aerbibabo/MyWayToGo/webbook/internal/repostory/dao"
+	"github.com/aerbibabo/MyWayToGo/webook/internal/domain"
+	"github.com/aerbibabo/MyWayToGo/webook/internal/repostory/dao"
 )
 
 var ErrUserDuplicateEmail = dao.ErrUserDuplicateEmail

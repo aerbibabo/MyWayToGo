@@ -2,8 +2,8 @@ package web
 
 import (
 	"errors"
-	"github.com/aerbibabo/MyWayToGo/webbook/internal/domain"
-	"github.com/aerbibabo/MyWayToGo/webbook/internal/service"
+	"github.com/aerbibabo/MyWayToGo/webook/internal/domain"
+	"github.com/aerbibabo/MyWayToGo/webook/internal/service"
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"

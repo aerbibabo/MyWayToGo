@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 	"errors"
-	"github.com/aerbibabo/MyWayToGo/webbook/internal/domain"
-	"github.com/aerbibabo/MyWayToGo/webbook/internal/repostory"
+	"github.com/aerbibabo/MyWayToGo/webook/internal/domain"
+	"github.com/aerbibabo/MyWayToGo/webook/internal/repostory"
 	"golang.org/x/crypto/bcrypt"
 )
 

@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/aerbibabo/MyWayToGo/webbook/internal/repostory"
-	"github.com/aerbibabo/MyWayToGo/webbook/internal/repostory/dao"
-	"github.com/aerbibabo/MyWayToGo/webbook/internal/service"
-	"github.com/aerbibabo/MyWayToGo/webbook/internal/web"
-	"github.com/aerbibabo/MyWayToGo/webbook/internal/web/middleware"
-	"github.com/aerbibabo/MyWayToGo/webbook/pkg/ginx/middleware/ratelimit"
+	"github.com/aerbibabo/MyWayToGo/webook/config"
+	"github.com/aerbibabo/MyWayToGo/webook/internal/repostory"
+	"github.com/aerbibabo/MyWayToGo/webook/internal/repostory/dao"
+	"github.com/aerbibabo/MyWayToGo/webook/internal/service"
+	"github.com/aerbibabo/MyWayToGo/webook/internal/web"
+	"github.com/aerbibabo/MyWayToGo/webook/internal/web/middleware"
+	"github.com/aerbibabo/MyWayToGo/webook/pkg/ginx/middleware/ratelimit"
 	"github.com/gin-contrib/sessions"
 	sessredis "github.com/gin-contrib/sessions/redis"
 	"github.com/gin-gonic/contrib/cors"
@@ -20,12 +21,22 @@ import (
 )
 
 func main() {
+	//server := gin.Default()
+	//server.GET("/hello", func(ctx *gin.Context) {
+	//	ctx.String(http.StatusOK, "Hello World!")
+	//})
+	//err := server.Run(":8080")
+	//if err != nil {
+	//	panic(err.Error())
+	//	return
+	//}
+
 	db := initDB()
 
 	//初始化数据库 , 笨方法, 以后不用
-	//err := dao.InitTables(db)
-	//if err != nil {
-	//	panic(err.Error())
+	//err1 := dao.InitTables(db)
+	//if err1 != nil {
+	//	panic(err1.Error())
 	//}
 
 	server := initWebServer()
@@ -66,7 +77,7 @@ func initWebServer() *gin.Engine {
 	}))
 
 	//登录校验
-	redisStore, err := sessredis.NewStore(16, "tcp", "localhost:6379",
+	redisStore, err := sessredis.NewStore(16, "tcp", config.Config.Redis.Addr,
 		"root",
 		"",
 		[]byte("0apssj7hhulymyb0"),
@@ -79,8 +90,8 @@ func initWebServer() *gin.Engine {
 	server.Use(sessions.Sessions("ssid", redisStore))
 
 	redisClient := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
-		DB:   1,
+		Addr: config.Config.Redis.Addr,
+		DB:   config.Config.Redis.DB,
 	})
 	server.Use(ratelimit.NewBuilder(redisClient, time.Second, 100).Build())
 
@@ -91,7 +102,7 @@ func initWebServer() *gin.Engine {
 }
 
 func initDB() *gorm.DB {
-	db, err := gorm.Open(mysql.Open("root:root@tcp(localhost:13306)/webook"))
+	db, err := gorm.Open(mysql.Open(config.Config.DB.DSN), &gorm.Config{})
 	if err != nil {
 		panic(err.Error())
 	}
